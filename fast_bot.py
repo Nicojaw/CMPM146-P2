@@ -70,15 +70,17 @@ def think(state, quip):
           node = node.AddChild(m,gamestate) # add child and descend tree
 
       # Rollout - this can often be made orders of magnitude quicker using a state.GetRandomMove() function
-      while gamestate.get_moves() != []: # while state is non-terminal
+      Autobots_RollOut = 0
+      while gamestate.get_moves() != [] and Autobots_RollOut < 5: # while state is non-terminal
           gamestate.apply_move(choice(gamestate.get_moves()))
+          Autobots_RollOut += 1
+           
        # Backpropagate
-
-     
       nameDict = { "red": "blue", "blue" : "red"}
       name = nameDict[state.get_whos_turn()]
       finalscore = RewardFunc(gamestate)
-      while node != None:
+      while node != None: 
+
         node.Update( finalscore )
         node = node.parentNode
 #       otherplayerstate = state.copy()

@@ -1,8 +1,8 @@
 from Tkinter import *
 from p2_game import Game, State
 
-import uct_bot as red_bot
-import uniform_bot as blue_bot
+import greedy_bot as red_bot
+import uct_bot as blue_bot
 BOTS = {'red': red_bot, 'blue': blue_bot}
 
 
