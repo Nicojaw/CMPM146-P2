@@ -14,7 +14,7 @@ class Node:
         self.player = state.get_whos_turn() # the only part of the state that the Node needs later
    
     def UCTSelectChild(self):   
-        s = sorted(self.childNodes, key = lambda c: c.score/c.visits + sqrt(2*log(self.visits)/c.visits))[-1]
+        s = sorted(self.childNodes, key = lambda c: float(c.score)/c.visits + sqrt(2*log(self.visits)/c.visits))[-1]
         return s
     
     def AddChild(self, m, s):
@@ -31,18 +31,17 @@ class Node:
         self.score += result
 
 
-def think(state, quip):
+def think(rootstate, quip):
 
   
   """ Conduct a UCT search for itermax iterations starting from rootstate.
         Return the best move from the rootstate.
         Assumes 2 alternating players (player 1 starts), with game results in the range [0.0, 1.0]."""
 
-  rootnode = Node(state = state)
+  rootnode = Node(state = rootstate)
   
-  me = rootnode.player
   
-  def RewardFunc(Gstate):
+  def RewardFunc(me,Gstate):
     reWar = 0.0
     if me == 'blue':
      # print str(Gstate.get_score())
@@ -52,34 +51,38 @@ def think(state, quip):
     return reWar
   
   timeNow = int(round(time.time()))
-
+  rollouts= 0
   while int(round(time.time())) - timeNow < 1:
       node = rootnode
-      gamestate = state.copy()
-
+      state = rootstate.copy()
+      rollouts +=  1
       # Select
       while node.untriedMoves == [] and node.childNodes != []: # node is fully expanded and non-terminal
           node = node.UCTSelectChild()
-          gamestate.apply_move(node.move)
+          state.apply_move(node.move)
 
       # Expand
 
       if node.untriedMoves != []: # if we can expand (i.e. state/node is non-terminal)
           m = choice(node.untriedMoves) 
-          gamestate.apply_move(m)
-          node = node.AddChild(m,gamestate) # add child and descend tree
+          state.apply_move(m)
+          node = node.AddChild(m,state) # add child and descend tree
 
       # Rollout - this can often be made orders of magnitude quicker using a state.GetRandomMove() function
-      while gamestate.get_moves() != []: # while state is non-terminal
-          gamestate.apply_move(choice(gamestate.get_moves()))
+      while state.get_moves() != []: # while state is non-terminal
+          state.apply_move(choice(state.get_moves()))
        # Backpropagate
 
      
       nameDict = { "red": "blue", "blue" : "red"}
       name = nameDict[state.get_whos_turn()]
-      finalscore = RewardFunc(gamestate)
+       #do it of node.parentNode do in while
       while node != None:
-        node.Update( finalscore )
+        if node.parentNode:
+          finalscore = RewardFunc(node.parentNode.player,state)
+        else:
+          finalscore = 0
+        node.Update(finalscore)
         node = node.parentNode
 #       otherplayerstate = state.copy()
 #      otherplayerstate.apply_move(otherplayerstate.get_moves()[0])
@@ -89,4 +92,5 @@ def think(state, quip):
   
   selected = sorted(rootnode.childNodes, key = lambda c: c.visits)[-1]
   print "selected score: " + str(selected.visits)
+  print "Number of Rollouts: " + str(rollouts)
   return selected.move # return the move that was most visited   

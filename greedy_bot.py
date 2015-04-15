@@ -5,11 +5,14 @@ def think(state, quip):
   Lmov = len (moves)
   prev = state.get_score()[state.get_whos_turn()]
   quip(state.get_score())
+  best = 0
+  bestMove = None
   
   for m in moves:
     cpy = state.copy()
     cpy.apply_move(m)
-    if cpy.get_score()[state.get_whos_turn()] > prev:
-      return m 
+    if cpy.get_score()[state.get_whos_turn()] >= best:
+      best = cpy.get_score()[state.get_whos_turn()]
+      bestMove = m 
 	
-  return state.get_moves()[randint(0, Lmov-1)]
+  return bestMove
